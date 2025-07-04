@@ -1,48 +1,43 @@
 <!-- Banner/Logo Placeholder -->
 <p align="center">
-  <svg width="100%" height="180" viewBox="0 0 1200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="1200" height="180" fill="#09f"/>
-    <path d="M0 120 Q300 200 600 120 T1200 120 V180 H0Z" fill="#181A20"/>
-    <text x="600" y="90" text-anchor="middle" font-size="64" font-family="Arial, Helvetica, sans-serif" fill="white" font-weight="bold">FerraEura</text>
-    <text x="600" y="130" text-anchor="middle" font-size="28" font-family="Arial, Helvetica, sans-serif" fill="white">The Ultimate Lavalink Wrapper</text>
+  <svg width="100%" height="220" viewBox="0 0 1200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="220" fill="#0a6cf1"/>
+    <path d="M0 150 Q350 210 600 150 T1200 150 V220 H0Z" fill="#181A20"/>
+    <text x="600" y="100" text-anchor="middle" font-size="68" font-family="Arial, Helvetica, sans-serif" fill="white" font-weight="bold" opacity="0.97">FerraEura</text>
+    <text x="600" y="150" text-anchor="middle" font-size="28" font-family="Arial, Helvetica, sans-serif" fill="white" opacity="0.88">Next-Gen Lavalink Client for Discord Bots</text>
   </svg>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/typing...-FerraEura-blue?style=for-the-badge" alt="Typing Animation"/>
+  <img src="https://img.shields.io/badge/NOW%20PLAYING-FERRAEURA-0a6cf1?style=for-the-badge&labelColor=23272a&color=0a6cf1" alt="Now Playing Badge"/>
+  <img src="https://img.shields.io/badge/open%20source-yes-43b581?style=for-the-badge&labelColor=23272a&color=43b581" alt="Open Source Badge"/>
+  <img src="https://img.shields.io/badge/license-MIT-23272a?style=for-the-badge&labelColor=23272a&color=7289da" alt="MIT License Badge"/>
 </p>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/ferraeura"><img src="https://img.shields.io/npm/v/ferraeura.svg?style=flat-square" alt="npm version"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="license"></a>
-</p>
-
-# 🎶 FerraEura
-
-> A powerful, modular, and extensible Lavalink client wrapper for Node.js, built on [Euralink](https://www.npmjs.com/package/euralink).
 
 ---
 
-## ✨ Features
+## 🚀 FerraEura: Unleash Your Discord Music Experience
 
-- ⚡ **Advanced Node Management:** Failover, reconnection, dynamic add/remove, node stats/health monitoring
-- 🎛️ **Rich Player Controls:** Seek, set volume, filters (bass boost, etc.), looping (track/queue), shuffle, metadata
-- 📚 **Powerful Queue System:** Prioritized queue, history, shuffle, export/import playlists
-- 🔍 **Multi-Source Search:** YouTube, SoundCloud, Spotify, and more with auto-detection and error handling
-- 🎵 **Spotify Support:** Built-in support for Spotify credentials and search engine selection
-- 🧩 **Extensible:** Custom player/queue classes, middleware/hooks, and full TypeScript support
+### 🎧 Modern, Fast, and Flexible Lavalink Client
+
+FerraEura is a next-generation Lavalink wrapper for Discord bots, designed for performance, extensibility, and a beautiful developer experience. Enjoy seamless music streaming, advanced queueing, and robust event handling—all in one open-source package.
 
 ---
 
-## ❓ Why FerraEura?
+## 🌟 Features
+- Blazing fast node management and failover
+- Advanced player controls and queueing
+- Multi-source search (YouTube, Spotify, SoundCloud, and more)
+- TypeScript support and full documentation
+- Customizable, event-driven, and easy to extend
 
-- [x] Modern, event-driven API
-- [x] Full TypeScript support
-- [x] Easy integration with Discord.js and other frameworks
-- [x] Handles node failover and reconnection automatically
-- [x] Supports all major music sources (YouTube, SoundCloud, Spotify)
-- [x] Advanced queue and player features out of the box
-- [x] Actively maintained and open-source
+---
+
+## 💡 Why Choose FerraEura?
+- Built for modern Discord bots
+- No vendor lock-in, fully open source
+- Inspired by the best, but uniquely original
+- Designed for both beginners and advanced devs
 
 ---
 
@@ -327,13 +322,13 @@ client.login('YOUR_BOT_TOKEN')
 
 ---
 
-## 🙏 Thank You & Credits
+## 🙏 Thanks & Acknowledgements
 
-Thank you for using **FerraEura**!
+Thank you for choosing **FerraEura**!
 
-**Credits:**
-- Euralink core by [your name or Euralink authors]
-- Inspired by the open-source music bot community
-- Special thanks to all contributors and testers
+**Special thanks:**
+- The Euralink project and contributors 
+- The Discord music bot community
+- Everyone who tests, reports bugs, or contributes ideas
 
 --- 
