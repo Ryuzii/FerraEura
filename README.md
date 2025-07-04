@@ -1,6 +1,15 @@
 <!-- Banner/Logo Placeholder -->
 <p align="center">
-  <img src="https://placehold.co/600x150?text=FerraEura" alt="FerraEura Logo"/>
+  <svg width="100%" height="180" viewBox="0 0 1200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="180" fill="#09f"/>
+    <path d="M0 120 Q300 200 600 120 T1200 120 V180 H0Z" fill="#181A20"/>
+    <text x="600" y="90" text-anchor="middle" font-size="64" font-family="Arial, Helvetica, sans-serif" fill="white" font-weight="bold">FerraEura</text>
+    <text x="600" y="130" text-anchor="middle" font-size="28" font-family="Arial, Helvetica, sans-serif" fill="white">The Ultimate Lavalink Wrapper</text>
+  </svg>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/typing...-FerraEura-blue?style=for-the-badge" alt="Typing Animation"/>
 </p>
 
 <p align="center">
@@ -315,3 +324,16 @@ client.on('raw', (d) => {
 
 client.login('YOUR_BOT_TOKEN')
 ``` 
+
+---
+
+## 🙏 Thank You & Credits
+
+Thank you for using **FerraEura**!
+
+**Credits:**
+- Euralink core by [your name or Euralink authors]
+- Inspired by the open-source music bot community
+- Special thanks to all contributors and testers
+
+--- 
