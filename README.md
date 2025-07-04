@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=wave&color=0a6cf1&height=300&section=header&text=FerraEura&fontSize=90&fontAlignY=35&animation=twinkling&fontColor=ffffff&desc=Next-Gen%20Lavalink%20Client%20for%20Discord%20Bots&descSize=25&descAlignY=60" />
+  <img src="https://capsule-render.vercel.app/api?type=wave&color=7F5AF0,2CB67D&height=300&section=header&text=FerraEura&fontSize=90&fontAlignY=35&animation=twinkling&fontColor=ffffff&desc=Next-Gen%20Lavalink%20Client%20for%20Discord%20Bots&descSize=25&descAlignY=60" />
 </p>
 
 <p align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Montserrat&duration=3000&pause=1000&color=0A6CF1&center=true&vCenter=true&width=600&lines=Powerful+Audio+Streaming+for+Discord+Bots;Optimized+for+Lavalink+v4+%26+Node.js;Industry-Leading+Performance;Easy+to+Implement%2C+Hard+to+Master" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Montserrat&duration=3000&pause=1000&color=7F5AF0&center=true&vCenter=true&width=600&lines=Powerful+Audio+Streaming+for+Discord+Bots;Optimized+for+Lavalink+v4+%26+Node.js;Industry-Leading+Performance;Easy+to+Implement%2C+Hard+to+Master" />
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/NOW%20PLAYING-FERRAEURA-0a6cf1?style=for-the-badge&labelColor=23272a&color=0a6cf1" alt="Now Playing Badge"/>
-  <img src="https://img.shields.io/badge/open%20source-yes-43b581?style=for-the-badge&labelColor=23272a&color=43b581" alt="Open Source Badge"/>
-  <img src="https://img.shields.io/badge/license-MIT-23272a?style=for-the-badge&labelColor=23272a&color=7289da" alt="MIT License Badge"/>
+  <img src="https://img.shields.io/badge/NOW%20PLAYING-FERRAEURA-7F5AF0?style=for-the-badge&labelColor=23272a&color=7F5AF0" alt="Now Playing Badge"/>
+  <img src="https://img.shields.io/badge/open%20source-yes-2CB67D?style=for-the-badge&labelColor=23272a&color=2CB67D" alt="Open Source Badge"/>
+  <img src="https://img.shields.io/badge/license-MIT-FFD803?style=for-the-badge&labelColor=23272a&color=FFD803" alt="MIT License Badge"/>
 </p>
 
 ---
@@ -328,5 +328,12 @@ Thank you for choosing **FerraEura**!
 - The Euralink project and contributors
 - The Discord music bot community
 - Everyone who tests, reports bugs, or contributes ideas
+
+---
+
+<p align="center">
+  <b>✨ FerraEura & Euralink are proudly created and led by <a href="https://github.com/Ryuzii">@Ryuzii</a> (<a href="https://github.com/euralink-team/">euralink-team</a>) ✨</b><br/>
+  <sub>All core development, vision, and leadership by <a href="https://github.com/Ryuzii">@Ryuzii</a>. If you use FerraEura or Euralink, please credit and support the original creator!</sub>
+</p>
 
 --- 
