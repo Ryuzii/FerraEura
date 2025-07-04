@@ -8,8 +8,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/npm/dm/ferraeura?style=for-the-badge&label=Downloads&color=7F5AF0&labelColor=23272a" alt="NPM Downloads"/>
-  <img src="https://img.shields.io/github/stars/euralink-team/ferraeura?style=for-the-badge&label=Stars&color=2CB67D&labelColor=23272a" alt="GitHub Stars"/>
-  <img src="https://img.shields.io/github/forks/euralink-team/ferraeura?style=for-the-badge&label=Forks&color=FFD803&labelColor=23272a" alt="GitHub Forks"/>
+  <img src="https://img.shields.io/github/stars/ryuzii/ferraeura?style=for-the-badge&label=Stars&color=2CB67D&labelColor=23272a" alt="GitHub Stars"/>
+  <img src="https://img.shields.io/github/forks/ryuzii/ferraeura?style=for-the-badge&label=Forks&color=FFD803&labelColor=23272a" alt="GitHub Forks"/>
   <img src="https://img.shields.io/npm/v/ferraeura?style=for-the-badge&label=Version&color=7F5AF0&labelColor=23272a" alt="NPM Version"/>
 </p>
 
