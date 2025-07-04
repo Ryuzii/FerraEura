@@ -7,9 +7,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/NOW%20PLAYING-FERRAEURA-7F5AF0?style=for-the-badge&labelColor=23272a&color=7F5AF0" alt="Now Playing Badge"/>
-  <img src="https://img.shields.io/badge/open%20source-yes-2CB67D?style=for-the-badge&labelColor=23272a&color=2CB67D" alt="Open Source Badge"/>
-  <img src="https://img.shields.io/badge/license-MIT-FFD803?style=for-the-badge&labelColor=23272a&color=FFD803" alt="MIT License Badge"/>
+  <img src="https://img.shields.io/npm/dm/ferraeura?style=for-the-badge&label=Downloads&color=7F5AF0&labelColor=23272a" alt="NPM Downloads"/>
+  <img src="https://img.shields.io/github/stars/euralink-team/ferraeura?style=for-the-badge&label=Stars&color=2CB67D&labelColor=23272a" alt="GitHub Stars"/>
+  <img src="https://img.shields.io/github/forks/euralink-team/ferraeura?style=for-the-badge&label=Forks&color=FFD803&labelColor=23272a" alt="GitHub Forks"/>
+  <img src="https://img.shields.io/npm/v/ferraeura?style=for-the-badge&label=Version&color=7F5AF0&labelColor=23272a" alt="NPM Version"/>
 </p>
 
 ---
