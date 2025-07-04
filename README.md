@@ -1,11 +1,9 @@
-<!-- Banner/Logo Placeholder -->
 <p align="center">
-  <svg width="100%" height="220" viewBox="0 0 1200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="1200" height="220" fill="#0a6cf1"/>
-    <path d="M0 150 Q350 210 600 150 T1200 150 V220 H0Z" fill="#181A20"/>
-    <text x="600" y="100" text-anchor="middle" font-size="68" font-family="Arial, Helvetica, sans-serif" fill="white" font-weight="bold" opacity="0.97">FerraEura</text>
-    <text x="600" y="150" text-anchor="middle" font-size="28" font-family="Arial, Helvetica, sans-serif" fill="white" opacity="0.88">Next-Gen Lavalink Client for Discord Bots</text>
-  </svg>
+  <img src="https://capsule-render.vercel.app/api?type=wave&color=0a6cf1&height=300&section=header&text=FerraEura&fontSize=90&fontAlignY=35&animation=twinkling&fontColor=ffffff&desc=Next-Gen%20Lavalink%20Client%20for%20Discord%20Bots&descSize=25&descAlignY=60" />
+</p>
+
+<p align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Montserrat&duration=3000&pause=1000&color=0A6CF1&center=true&vCenter=true&width=600&lines=Powerful+Audio+Streaming+for+Discord+Bots;Optimized+for+Lavalink+v4+%26+Node.js;Industry-Leading+Performance;Easy+to+Implement%2C+Hard+to+Master" />
 </p>
 
 <p align="center">
@@ -327,7 +325,7 @@ client.login('YOUR_BOT_TOKEN')
 Thank you for choosing **FerraEura**!
 
 **Special thanks:**
-- The Euralink project and contributors 
+- The Euralink project and contributors
 - The Discord music bot community
 - Everyone who tests, reports bugs, or contributes ideas
 
