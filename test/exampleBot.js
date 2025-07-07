@@ -1,8 +1,8 @@
 const { Client, GatewayIntentBits, GatewayDispatchEvents } = require('discord.js');
-const { Teralink } = require('../build');
+const { Teralink } = require('teralink');
 
 // Replace with your bot token and Lavalink node config
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN || 'MTM4NzcyNDAzMTg1OTYyMjAxMg.GtsQNj.eGazewjT_khhNSq4w-LyeknARwSqEafpUROttc';
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN || 'YOUR_BOT_TOKEN';
 const LAVALINK_NODES = [
   {
     name: 'main',
