@@ -1,90 +1,100 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=wave&color=7F5AF0,2CB67D&height=300&section=header&text=FerraEura&fontSize=90&fontAlignY=35&animation=twinkling&fontColor=ffffff&desc=Next-Gen%20Lavalink%20Client%20for%20Discord%20Bots&descSize=25&descAlignY=60" />
+  <img src="https://capsule-render.vercel.app/api?type=wave&color=7F5AF0,2CB67D&height=300&section=header&text=Teralink&fontSize=90&fontAlignY=35&animation=twinkling&fontColor=ffffff&desc=Next-Gen%20Lavalink%20Manager%20for%20Discord%20Bots&descSize=25&descAlignY=60" />
 </p>
 
 <p align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Montserrat&duration=3000&pause=1000&color=7F5AF0&center=true&vCenter=true&width=600&lines=Powerful+Audio+Streaming+for+Discord+Bots;Optimized+for+Lavalink+v4+%26+Node.js;Industry-Leading+Performance;Easy+to+Implement%2C+Hard+to+Master" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Montserrat&duration=3000&pause=1000&color=7F5AF0&center=true&vCenter=true&width=600&lines=Super+Performant+Lavalink+Manager+for+Discord+Bots;Optimized+for+Lavalink+v4+%26+Node.js;Industry-Leading+Performance;Extensible+and+Modern+API" />
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/npm/dm/ferraeura?style=for-the-badge&label=Downloads&color=7F5AF0&labelColor=23272a" alt="NPM Downloads"/>
-  <img src="https://img.shields.io/github/stars/ryuzii/ferraeura?style=for-the-badge&label=Stars&color=2CB67D&labelColor=23272a" alt="GitHub Stars"/>
-  <img src="https://img.shields.io/github/forks/ryuzii/ferraeura?style=for-the-badge&label=Forks&color=FFD803&labelColor=23272a" alt="GitHub Forks"/>
-  <img src="https://img.shields.io/npm/v/ferraeura?style=for-the-badge&label=Version&color=7F5AF0&labelColor=23272a" alt="NPM Version"/>
+  <img src="https://img.shields.io/npm/dm/teralink?style=for-the-badge&label=Downloads&color=7F5AF0&labelColor=23272a" alt="NPM Downloads"/>
+  <img src="https://img.shields.io/github/stars/teralink-team/teralink?style=for-the-badge&label=Stars&color=2CB67D&labelColor=23272a" alt="GitHub Stars"/>
+  <img src="https://img.shields.io/github/forks/teralink-team/teralink?style=for-the-badge&label=Forks&color=FFD803&labelColor=23272a" alt="GitHub Forks"/>
+  <img src="https://img.shields.io/npm/v/teralink?style=for-the-badge&label=Version&color=7F5AF0&labelColor=23272a" alt="NPM Version"/>
 </p>
 
 ---
 
-## 🚀 FerraEura: Unleash Your Discord Music Experience
+## 🚀 Teralink: Next-Generation Lavalink Manager
 
-### 🎧 Modern, Fast, and Flexible Lavalink Client
+### 🎧 Modern, Fast, and Extensible Lavalink Client
 
-FerraEura is a next-generation Lavalink wrapper for Discord bots, designed for performance, extensibility, and a beautiful developer experience. Enjoy seamless music streaming, advanced queueing, and robust event handling—all in one open-source package.
+Teralink is a next-generation, v4-only Lavalink manager for Discord bots, designed for performance, extensibility, and a beautiful developer experience. Enjoy seamless music streaming, advanced queueing, robust event handling, and real-time features—all in one open-source package.
 
 ---
 
 ## 🌟 Features
-- Blazing fast node management and failover
+- Super-performant node management and failover
 - Advanced player controls and queueing
-- Multi-source search (YouTube, Spotify, SoundCloud, and more)
+- Multi-source search (YouTube, Spotify, SoundCloud, Apple Music, and more)
 - TypeScript support and full documentation
-- Customizable, event-driven, and easy to extend
+- Plugin system for extensibility
+- Real-time voice channel status sync (statusSync)
+- Region-aware node selection and health diagnostics
+- Auto-resume, advanced queue, lyrics (including real-time LRC), and more
 
 ---
 
-## 💡 Why Choose FerraEura?
-- Built for modern Discord bots
-- No vendor lock-in, fully open source
+## 💡 Why Choose Teralink?
+- Built for modern Discord bots (Lavalink v4+ only)
+- No legacy code, fully open source
 - Inspired by the best, but uniquely original
 - Designed for both beginners and advanced devs
+- Created and maintained by [Ryuzii](https://github.com/Ryuzii)
 
 ---
 
 ## 📦 Installation
 
 ```sh
-npm install ferraeura
+npm install teralink
 ```
-
-> **Note:** `euralink` is a dependency and will be installed automatically with FerraEura.
 
 ---
 
 ## 🚀 Quick Start
 
 ```js title="index.js"
-const { FerraEura } = require('ferra-eura');
+const { Teralink } = require('teralink');
+const { Client, GatewayIntentBits } = require('discord.js');
 
-const client = new FerraEura({
-  nodes: [
-    { name: 'Lavalink', url: 'localhost:2333', auth: 'youshallpass', secure: false }
-  ],
-  spotify: [
-    { ClientID: 'your_spotify_client_id', ClientSecret: 'your_spotify_client_secret' }
-  ],
-  defaultSearchEngine: 'FerraEuraSpotify'
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.MessageContent
+  ]
 });
 
-client.on('nodeConnect', node => console.log(`Node connected: ${node.name}`));
-client.on('trackStart', (player, track) => console.log(`Track started: ${track.info.title}`));
+const nodes = [
+  { name: 'Lavalink', host: 'localhost', port: 2333, password: 'youshallnotpass', secure: false }
+];
 
-// Create a player
-const player = client.createPlayer({
-  guildId: '123',
-  voiceId: '456',
-  textId: '789',
-  volume: 100,
-  deaf: true
-});
-
-// Search and play
-(async () => {
-  const result = await client.search('Never Gonna Give You Up');
-  if (result.tracks && result.tracks.length) {
-    player.add(result.tracks[0]);
-    await player.play();
+function send(packet) {
+  const guildId = packet.d?.guild_id || packet.guild_id;
+  if (!guildId) return;
+  const guild = client.guilds.cache.get(guildId);
+  if (guild && guild.shard) {
+    guild.shard.send(packet);
+  } else if (client.ws && typeof client.ws.send === 'function') {
+    client.ws.send(packet);
   }
-})();
+}
+
+const tera = new Teralink(client, nodes, {
+  send,
+  defaultSearchPlatform: 'ytmsearch',
+  sync: { template: 'Now playing: {title} by {author}' },
+  // ...other options
+});
+
+client.once('ready', () => {
+  tera.init(client.user.id);
+  console.log(`Logged in as ${client.user.tag}`);
+});
+
+// See exampleBot.js for full command and event handling
 ```
 
 ---
@@ -93,56 +103,50 @@ const player = client.createPlayer({
 
 ### 🖧 Node Management
 ```js
-client.addNode({ name: 'Backup', url: 'localhost:2444', auth: 'backup', secure: false });
-client.removeNode('Backup');
-console.log(client.getNodeStats());
-client.reconnectNodes();
-console.log(client.getBestNode());
+tera.createNode({ name: 'Backup', host: 'localhost', port: 2444, password: 'backup', secure: false });
+tera.destroyNode('Backup');
+console.log(tera.getNodesHealth());
+console.log(tera.getBestNodeForRegion('us'));
 ```
 
 ### 🎚️ Player Controls
 ```js
 player.pause();
-player.resume();
+player.play();
 player.seek(60000); // Seek to 1 minute
 player.setVolume(80);
-player.setFilters({ bassboost: true });
-player.setLoopTrack(true);
-player.setLoopQueue(true);
-player.shuffle();
+player.filters.setBassboost(true);
+player.setLoop('track');
+player.queue.shuffle();
 ```
 
 ### 📚 Queue Controls
 ```js
-player.queue.addFirst(track);
-player.queue.remove(2); // Remove track at index 2
 player.queue.move(0, 3); // Move first track to position 3
-const exported = player.queue.export();
-player.queue.import(exported);
-console.log(player.queue.getHistory());
+player.queue.remove(2); // Remove track at index 2
+console.log(player.queue.toArray());
 ```
 
 ### 🔍 Search Abstraction
 ```js
-// Auto-detects source (YouTube, SoundCloud, Spotify)
-const yt = await client.search('ytsearch:lofi hip hop');
-const sc = await client.search('scsearch:chill beats');
-const sp = await client.search('https://open.spotify.com/track/xyz');
-// You can also force Spotify search:
-const spotify = await client.search('Never Gonna Give You Up', { engine: 'FerraEuraSpotify' });
+// Auto-detects source (YouTube, SoundCloud, Spotify, Apple Music)
+const yt = await tera.search('ytsearch:lofi hip hop', user);
+const sc = await tera.search('scsearch:chill beats', user);
+const sp = await tera.search('https://open.spotify.com/track/xyz', user);
+const am = await tera.search('https://music.apple.com/us/album/xyz', user);
 ```
 
 ### 📢 Events
 ```js
-client.on('trackEnd', (player, track) => { /* ... */ });
-client.on('queueEnd', player => { /* ... */ });
-client.on('playerUpdate', (player, data) => { /* ... */ });
-client.on('searchError', (err, ctx) => { console.error('Search failed:', ctx.query, err); });
+tera.on('trackStart', (player, track) => { /* ... */ });
+tera.on('queueEnd', player => { /* ... */ });
+tera.on('playerError', (player, error) => { /* ... */ });
+tera.on('debug', message => { console.log(message); });
 ```
 
 ---
 
-## 🧩 Extending FerraEura
+## 🧩 Extending Teralink
 
 You can provide your own Player/Queue classes for custom behavior:
 
@@ -151,8 +155,8 @@ class MyPlayer extends Player {
   // Custom logic...
 }
 
-const client = new FerraEura({
-  nodes: [...],
+const tera = new Teralink(client, nodes, {
+  send,
   customPlayerClass: MyPlayer
 });
 ```
@@ -161,12 +165,12 @@ const client = new FerraEura({
 
 ## 📝 TypeScript Support
 - Full types for all classes, options, and events.
-- See `types/index.d.ts` for details and autocompletion.
+- See `build/index.d.ts` for details and autocompletion.
 
 ---
 
 ## 🤖 Example Bot
-See [`example-bot.js`](./example-bot.js) for a real-world Discord.js bot using FerraEura, including a play command, event handling, and Spotify support.
+See [`test/exampleBot.js`](./test/exampleBot.js) for a real-world Discord.js bot using Teralink, including play, queue, skip, stop, nowplaying, and real-time lyrics commands.
 
 ---
 
@@ -190,151 +194,20 @@ MIT
 
 ---
 
-## 🧪 Example: Using Euralink Directly (V2 Features)
-
-> This is an advanced example for users who want to use Euralink directly, including V2 features like player state persistence, custom activity, and more. Most users should use the FerraEura wrapper for simplicity and best practices.
-
-```js
-const { 
-    Client,
-    GatewayDispatchEvents,
-    GatewayIntentBits,
-    Partials
-} = require('discord.js')
-const { Euralink } = require('euralink')
-
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildVoiceStates,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-    ],
-    partials: [Partials.Channel]
-});
-
-// Configure your Lavalink nodes
-const nodes = [
-    {
-        name: 'Main Node',
-        host: 'localhost',
-        password: 'youshallnotpass',
-        port: 2333,
-        secure: false,
-        regions: ['us_central', 'us_east']
-    }
-]
-
-// Initialize Euralink with V2 features
-const eura = new Euralink(client, nodes, {
-    send: (data) => {
-        const guild = client.guilds.cache.get(data.d.guild_id);
-        if (guild) guild.shard.send(data);
-    },
-    defaultSearchPlatform: 'ytmsearch',
-    restVersion: 'v4',
-    
-    // V2 Features
-    euraSync: {
-        template: '🎵 {title} by {author}'
-    },
-    setActivityStatus: {
-        template: '🎵 {title} by {author}'
-    },
-    autoResume: true
-});
-
-client.on('ready', async () => {
-    console.log(`[Discord] Logged in as ${client.user.tag}`);
-    eura.init(client.user.id);
-    
-    // Load player states on startup
-    try {
-        await eura.loadPlayersState('./EuraPlayers.json');
-        console.log('[Euralink V2] Player states loaded successfully');
-    } catch (error) {
-        console.log('[Euralink V2] No previous player states found');
-    }
-})
-
-// Save player states on shutdown
-process.on('SIGINT', async () => {
-    console.log('[Euralink V2] Saving player states...');
-    await eura.savePlayersState('./EuraPlayers.json');
-  process.exit(0);
-});
-
-// Music command handler
-client.on('messageCreate', async (message) => {
-    if (message.author.bot || !message.guild) return;
-    if (!message.content.startsWith('!play ')) return;
-
-    const query = message.content.slice('!play '.length).trim();
-    if (!query) return message.reply('Please provide a search query or URL!');
-
-    const member = message.member;
-    const voiceChannel = member.voice?.channel;
-    if (!voiceChannel) {
-        return message.reply('You must be in a voice channel!');
-    }
-
-    const player = eura.createConnection({
-        guildId: message.guildId,
-        voiceChannel: voiceChannel.id,
-        textChannel: message.channelId
-    })
-
-    const result = await eura.resolve({ 
-        query, 
-        requester: message.author 
-    });
-
-    const { loadType, tracks, playlistInfo } = result;
-
-    if (loadType === 'playlist') {
-        player.queue.addPlaylist(tracks, playlistInfo);
-        message.channel.send(`📀 Playlist: **${playlistInfo.name}** with **${tracks.length}** tracks`);
-        if (!player.playing && !player.paused) return player.play();
-    } else if (loadType === "search" || loadType === "track") {
-        const track = tracks.shift();
-        track.info.requester = message.author;
-        player.queue.add(track);
-        message.channel.send(`🎵 Added: **${track.info.title}**`);
-        if (!player.playing && !player.paused) return player.play();
-    } else {
-        return message.channel.send("❌ No results found.");
-    }
-});
-
-// Essential: Forward Discord voice events to Euralink
-client.on('raw', (d) => {
-    if ([
-            GatewayDispatchEvents.VoiceStateUpdate,
-            GatewayDispatchEvents.VoiceServerUpdate,
-    ].includes(d.t)) {
-    eura.updateVoiceState(d);
-    }
-});
-
-client.login('YOUR_BOT_TOKEN')
-``` 
-
----
-
 ## 🙏 Thanks & Acknowledgements
 
-Thank you for choosing **FerraEura**!
+Thank you for choosing **Teralink**!
 
 **Special thanks:**
-- The Euralink project and contributors
+- The Euralink project and contributors for inspiration
 - The Discord music bot community
 - Everyone who tests, reports bugs, or contributes ideas
 
 ---
 
 <p align="center">
-  <b>✨ FerraEura & Euralink are proudly created and led by <a href="https://github.com/Ryuzii">@Ryuzii</a> (<a href="https://github.com/euralink-team/">euralink-team</a>) ✨</b><br/>
-  <sub>All core development, vision, and leadership by <a href="https://github.com/Ryuzii">@Ryuzii</a>. If you use FerraEura or Euralink, please credit and support the original creator!</sub>
+  <b>✨ Teralink is proudly created and led by <a href="https://github.com/Ryuzii">@Ryuzii</a> ✨</b><br/>
+  <sub>All core development, vision, and leadership by <a href="https://github.com/Ryuzii">@Ryuzii</a>. If you use Teralink, please credit and support the original creator!</sub>
 </p>
 
 --- 
