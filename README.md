@@ -82,11 +82,23 @@ function send(packet) {
   }
 }
 
-const tera = new Teralink(client, nodes, {
+const tera = new Teralink(client, LAVALINK_NODES, {
   send,
   defaultSearchPlatform: 'ytmsearch',
+  restVersion: 'v4',
+  plugins: [],
   sync: { template: 'Now playing: {title} by {author}' },
-  // ...other options
+  resumeKey: 'teralink-resume',
+  resumeTimeout: 60000,
+  dynamicNodeSwitching: true,
+  autoReconnectNodes: true,
+  autopauseOnEmpty: true,
+  wsReconnectTries: 5,
+  wsReconnectInterval: 5000,
+  restRetryCount: 3,
+  restTimeout: 5000,
+  lazyLoad: true,
+  lazyLoadTimeout: 5000
 });
 
 client.once('ready', () => {
