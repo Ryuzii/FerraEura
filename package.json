@@ -1,0 +1,54 @@
+{
+    "name": "teralink",
+    "description": "A next-generation, super-performant, v4-only Lavalink manager for Node.js with advanced features, extensibility, and optimized resource usage.",
+    "main": "build/index.js",
+    "types": "build/index.d.ts",
+    "files": [
+      "build"
+    ],
+    "author": "Ryuzii",
+    "license": "MIT",
+    "keywords": [
+      "lavalink",
+      "music",
+      "discord",
+      "discordjs",
+      "discord.js",
+      "discordjs-lavalink",
+      "audio",
+      "teralink",
+      "performance",
+      "http2",
+      "optimized",
+      "v4",
+      "manager"
+    ],
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/teralink-team/teralink.git"
+    },
+    "bugs": {
+      "url": "https://github.com/teralink-team/teralink/issues"
+    },
+    "homepage": "https://teralink-website.vercel.app/",
+    "devDependencies": {
+      "@types/jsdom": "^21.1.7",
+      "@types/node": "^22.15.29"
+    },
+    "dependencies": {
+      "axios": "^1.9.0",
+      "discord.js": "^14.19.3",
+      "jsdom": "^26.1.0",
+      "lrclib-api": "^2.0.0",
+      "tseep": "^1.3.1",
+      "undici": "^7.10.0",
+      "ws": "^8.18.2"
+    },
+    "version": "0.1.0",
+    "contributors": [
+      {
+        "name": "Ryuzii",
+        "url": "https://github.com/Ryuzii"
+      }
+    ]
+  }
