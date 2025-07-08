@@ -5,11 +5,14 @@ const nodeUtil = require("node:util");
 class Rest {
   constructor(tera, options) {
     this.tera = tera;
+    // Use new nested structure for REST config
     this.url = `http${options.secure ? "s" : ""}://${options.host}:${options.port}`;
     console.log('[Rest.js] Creating Agent with origin:', this.url);
     this.sessionId = options.sessionId;
     this.password = options.password;
-    this.version = options.restVersion;
+    this.version = (options.rest?.version || options.restVersion);
+    this.retryCount = (options.rest?.retryCount || options.restRetryCount || 3);
+    this.timeout = (options.rest?.timeout || options.restTimeout || 5000);
     try {
       this.agent = new Agent({
         pipelining: 1,
@@ -172,6 +175,37 @@ class Rest {
   }
   async getInfo() {
     return this.makeRequest("GET", `/${this.version}/info`);
+  }
+  pruneCaches() {
+    const now = Date.now();
+    if (this.cache && this.cache instanceof Map) {
+      for (const [key, value] of this.cache.entries()) {
+        if (value.timestamp && (now - value.timestamp) > 30000) {
+          this.cache.delete(key);
+        }
+      }
+    }
+    if (this.trackCache && this.trackCache instanceof Map) {
+      for (const [key, value] of this.trackCache.entries()) {
+        if (value.timestamp && (now - value.timestamp) > 30000) {
+          this.trackCache.delete(key);
+        }
+      }
+    }
+    if (this.nodeInfoCache && this.nodeInfoCache instanceof Map) {
+      for (const [key, value] of this.nodeInfoCache.entries()) {
+        if (value.timestamp && (now - value.timestamp) > 30000) {
+          this.nodeInfoCache.delete(key);
+        }
+      }
+    }
+  }
+  destroy() {
+    // Remove all event listeners and clear caches
+    this.removeAllListeners && this.removeAllListeners();
+    if (this.cache) this.cache.clear();
+    if (this.trackCache) this.trackCache.clear();
+    if (this.nodeInfoCache) this.nodeInfoCache.clear();
   }
 }
 

@@ -9,11 +9,13 @@ class Node {
      */
     constructor(tera, node, options) {
         this.tera = tera;
+        this.node = node;
+        this.options = options;
         this.name = node.name || node.host;
         this.host = node.host || "localhost";
         this.port = node.port || 2333;
         this.password = node.password || "youshallnotpass";
-        this.restVersion = options.restVersion;
+        this.restVersion = (options.rest?.version || options.restVersion);
         this.secure = node.secure || false;
         this.sessionId = node.sessionId || null;
         this.rest = new Rest(tera, this);
@@ -50,12 +52,12 @@ class Node {
         };
         this.connected = false;
         // Improved autoResume configuration
-        this.resumeKey = options.resumeKey || null;
-        this.resumeTimeout = options.resumeTimeout || 60;
-        this.autoResume = options.autoResume || false;
+        this.resumeKey = (options.resume?.key || options.resumeKey || null);
+        this.resumeTimeout = (options.resume?.timeout || options.resumeTimeout || 60);
+        this.autoResume = (options.resume?.enabled || options.autoResume || false);
         this.autoResumePlayers = new Map(); // Track players for autoResume
-        this.reconnectTimeout = options.reconnectTimeout || 5000;
-        this.reconnectTries = options.reconnectTries || 3;
+        this.reconnectTimeout = (options.node?.ws?.reconnectInterval || options.reconnectTimeout || 5000);
+        this.reconnectTries = (options.node?.ws?.reconnectTries || options.reconnectTries || 3);
         this.reconnectAttempt = null;
         this.reconnectAttempted = 1;
         this.lastStats = Date.now();
@@ -287,19 +289,12 @@ class Node {
     }
 
     destroy(clean = false) {
+        // Remove all event listeners and clear caches
+        this.removeAllListeners && this.removeAllListeners();
+        if (this.autoResumePlayers) this.autoResumePlayers.clear();
+        if (this.pingHistory) this.pingHistory.length = 0;
+        if (this.rest && typeof this.rest.destroy === 'function') this.rest.destroy();
         this.connected = false;
-        if (this.ws) {
-            this.ws.close();
-            this.ws = null;
-        }
-        if (this.reconnectAttempt) {
-            clearTimeout(this.reconnectAttempt);
-            this.reconnectAttempt = null;
-        }
-        this.autoResumePlayers.clear();
-        if (this.rest) {
-            this.rest.destroy();
-        }
         this.tera.emit("nodeDestroy", this);
     }
 

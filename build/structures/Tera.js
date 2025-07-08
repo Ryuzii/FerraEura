@@ -40,34 +40,83 @@ class Teralink extends EventEmitter {
     this.clientId = null;
     this.initiated = false;
     this.send = options.send;
-    this.defaultSearchPlatform = options.defaultSearchPlatform || "ytmsearch";
-    this.restVersion = SUPPORTED_VERSION;
-    this.tracks = [];
+
+    // --- Begin: New Options Structure Migration ---
+    // Source
+    this.source = options.source || { default: options.defaultSearchPlatform || "ytmsearch" };
+    // REST
+    this.rest = options.rest || {
+      version: options.restVersion || SUPPORTED_VERSION,
+      retryCount: options.restRetryCount || 3,
+      timeout: options.restTimeout || 5000
+    };
+    // Plugins
     this.plugins = options.plugins || [];
-    this.resumeKey = options.resumeKey || "teralink-resume";
-    this.resumeTimeout = options.resumeTimeout || 60_000;
-    this.dynamicNodeSwitching = options.dynamicNodeSwitching !== false;
-    this.autoReconnectNodes = options.autoReconnectNodes !== false;
-    this.autopauseOnEmpty = options.autopauseOnEmpty !== false;
-    this.wsReconnectTries = options.wsReconnectTries || 5;
-    this.wsReconnectInterval = options.wsReconnectInterval || 5000;
-    this.restRetryCount = options.restRetryCount || 3;
-    this.restTimeout = options.restTimeout || 5000;
+    // Resume
+    this.resume = options.resume || {
+      key: options.resumeKey || "teralink-resume",
+      timeout: options.resumeTimeout || 60_000
+    };
+    // Node
+    this.node = options.node || {
+      dynamicSwitching: options.dynamicNodeSwitching !== undefined ? options.dynamicNodeSwitching : true,
+      autoReconnect: options.autoReconnectNodes !== undefined ? options.autoReconnectNodes : true,
+      ws: {
+        reconnectTries: options.wsReconnectTries || 5,
+        reconnectInterval: options.wsReconnectInterval || 5000
+      }
+    };
+    // Autopause
+    this.autopauseOnEmpty = options.autopauseOnEmpty !== undefined ? options.autopauseOnEmpty : true;
+    // Lazy Load
+    this.lazyLoad = (options.lazyLoad && typeof options.lazyLoad === 'object') ? options.lazyLoad.enabled : (options.lazyLoad || false);
+    this.lazyLoadTimeout = (options.lazyLoad && typeof options.lazyLoad === 'object') ? options.lazyLoad.timeout : (options.lazyLoadTimeout || 5000);
+    // Sync
+    this.sync = options.sync;
+    // --- End: New Options Structure Migration ---
+
+    this.defaultSearchPlatform = this.source.default;
+    this.restVersion = this.rest.version;
+    this.tracks = [];
+    this.resumeKey = this.resume.key;
+    this.resumeTimeout = this.resume.timeout;
+    this.dynamicNodeSwitching = this.node.dynamicSwitching;
+    this.autoReconnectNodes = this.node.autoReconnect;
+    this.wsReconnectTries = this.node.ws.reconnectTries;
+    this.wsReconnectInterval = this.node.ws.reconnectInterval;
+    this.restRetryCount = this.rest.retryCount;
+    this.restTimeout = this.rest.timeout;
     this.regionCache = new Map();
     this.nodeHealthCache = new Map();
     this.cacheTimeout = 30_000;
-    this.lazyLoad = options.lazyLoad || false;
-    this.lazyLoadTimeout = options.lazyLoadTimeout || 5000;
+    this.resolveCache = new Map(); // { identifier: { result, timestamp } }
+    this.resolveCacheMaxSize = 200;
+    this.resolveCacheTTL = 5 * 60 * 1000; // 5 minutes
     // Only statusSync (voice channel status)
-    if (options.sync === true) {
+    if (this.sync === true) {
       this.statusSync = new Status(this.client);
-    } else if (typeof options.sync === 'object' && options.sync !== null) {
-      this.statusSync = new Status(this.client, options.sync);
+    } else if (typeof this.sync === 'object' && this.sync !== null) {
+      this.statusSync = new Status(this.client, this.sync);
     } else {
       this.statusSync = null;
     }
     this.pluginInstances = [];
     this.version = pkgVersion; // Expose package version
+  }
+
+  // Helper to prune resolve cache
+  pruneResolveCache() {
+    const now = Date.now();
+    for (const [key, value] of this.resolveCache.entries()) {
+      if ((now - value.timestamp) > this.resolveCacheTTL) {
+        this.resolveCache.delete(key);
+      }
+    }
+    // Limit cache size
+    while (this.resolveCache.size > this.resolveCacheMaxSize) {
+      const firstKey = this.resolveCache.keys().next().value;
+      this.resolveCache.delete(firstKey);
+    }
   }
 
   /**
@@ -133,7 +182,25 @@ class Teralink extends EventEmitter {
       });
   }
 
+  // Add cache pruning for regionCache and nodeHealthCache
+  pruneCaches() {
+    const now = Date.now();
+    // Prune regionCache
+    for (const [key, value] of this.regionCache.entries()) {
+      if ((now - value.timestamp) > this.cacheTimeout) {
+        this.regionCache.delete(key);
+      }
+    }
+    // Prune nodeHealthCache
+    for (const [key, value] of this.nodeHealthCache.entries()) {
+      if ((now - value.timestamp) > this.cacheTimeout) {
+        this.nodeHealthCache.delete(key);
+      }
+    }
+  }
+
   getNodeHealth(node) {
+    this.pruneCaches();
     const now = Date.now();
     const cached = this.nodeHealthCache.get(node.name);
     if (cached && (now - cached.timestamp) < this.cacheTimeout) {
@@ -160,6 +227,7 @@ class Teralink extends EventEmitter {
   }
 
   fetchRegion(region) {
+    this.pruneCaches();
     const now = Date.now();
     const cacheKey = `region_${region}`;
     const cached = this.regionCache.get(cacheKey);
@@ -279,6 +347,17 @@ class Teralink extends EventEmitter {
     if (!requestNode) throw new Error("No nodes are available.");
     const regex = /^https?:\/\//;
     const identifier = regex.test(query) ? query : `${querySource}:${query}`;
+
+    // --- Begin: Caching logic ---
+    this.pruneResolveCache();
+    const cacheKey = identifier;
+    const cached = this.resolveCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < this.resolveCacheTTL) {
+      this.emit("debug", `Cache hit for resolve: ${identifier}`);
+      return cached.result;
+    }
+    // --- End: Caching logic ---
+
     this.emit("debug", `Searching for ${query} on node \"${requestNode.name}\"`);
     let response = await requestNode.rest.makeRequest("GET", `/${requestNode.rest.version}/loadtracks?identifier=${encodeURIComponent(identifier)}`);
     // Handle failed requests (like 500 errors)
@@ -323,11 +402,16 @@ class Teralink extends EventEmitter {
       tracks = await Promise.all(trackData.map(track => Promise.resolve(new (require("./Track").Track)(track, requester, requestNode))));
       this.emit("debug", `Search ${response.loadType !== "error" && response.loadType !== "LOAD_FAILED" ? "Success" : "Failed"} for \"${query}\" on node \"${requestNode.name}\", loadType: ${response.loadType} tracks: ${tracks.length}`);
     }
-    return {
+    const result = {
       loadType: response.loadType,
       tracks,
       playlistInfo
     };
+    // --- Store in cache ---
+    this.resolveCache.set(cacheKey, { result, timestamp: Date.now() });
+    this.pruneResolveCache();
+    // --- End cache store ---
+    return result;
   }
 
   /**
@@ -377,6 +461,7 @@ class Teralink extends EventEmitter {
   clearCaches() {
     this.regionCache.clear();
     this.nodeHealthCache.clear();
+    this.resolveCache.clear();
     this.emit("debug", "All caches cleared");
   }
 
@@ -398,15 +483,23 @@ class Teralink extends EventEmitter {
   }
 
   async destroy() {
+    // Remove all event listeners and clear caches
+    this.removeAllListeners();
     for (const player of this.players.values()) {
-      player.destroy();
+      player.removeAllListeners && player.removeAllListeners();
+      if (typeof player.destroy === 'function') player.destroy();
+    }
+    for (const node of this.nodeMap.values()) {
+      node.removeAllListeners && node.removeAllListeners();
+      if (typeof node.destroy === 'function') node.destroy();
     }
     this.players.clear();
-    for (const node of this.nodeMap.values()) {
-      node.destroy();
-    }
     this.nodeMap.clear();
-    this.clearCaches();
+    this.regionCache.clear();
+    this.nodeHealthCache.clear();
+    this.resolveCache.clear();
+    this.pluginInstances = [];
+    this.statusSync = null;
     this.initiated = false;
     this.emit("destroy");
   }

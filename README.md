@@ -11,6 +11,7 @@
   <img src="https://img.shields.io/github/stars/Ryuzii/teralink?style=for-the-badge&label=Stars&color=2CB67D&labelColor=23272a" alt="GitHub Stars"/>
   <img src="https://img.shields.io/github/forks/Ryuzii/teralink?style=for-the-badge&label=Forks&color=FFD803&labelColor=23272a" alt="GitHub Forks"/>
   <img src="https://img.shields.io/npm/v/teralink?style=for-the-badge&label=Version&color=7F5AF0&labelColor=23272a" alt="NPM Version"/>
+  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/Changelog-Important-blueviolet?style=for-the-badge&labelColor=23272a" alt="Changelog"/></a>
 </p>
 
 ---
@@ -32,6 +33,8 @@ Teralink is a next-generation, v4-only Lavalink manager for Discord bots, design
 - Real-time voice channel status sync (statusSync)
 - Region-aware node selection and health diagnostics
 - Auto-resume, advanced queue, lyrics (including real-time LRC), and more
+- **Clean, nested config structure for easier setup**
+- **Intelligent caching for super-fast track/playlist resolution**
 
 ---
 
@@ -84,21 +87,31 @@ function send(packet) {
 
 const tera = new Teralink(client, LAVALINK_NODES, {
   send,
-  defaultSearchPlatform: 'ytmsearch',
-  restVersion: 'v4',
+  source: { default: 'ytmsearch' },
+  rest: {
+    version: 'v4',
+    retryCount: 3,
+    timeout: 5000
+  },
   plugins: [],
   sync: { template: 'Now playing: {title} by {author}' },
-  resumeKey: 'teralink-resume',
-  resumeTimeout: 60000,
-  dynamicNodeSwitching: true,
-  autoReconnectNodes: true,
+  resume: {
+    key: 'teralink-resume',
+    timeout: 60000
+  },
+  node: {
+    dynamicSwitching: true,
+    autoReconnect: true,
+    ws: {
+      reconnectTries: 5,
+      reconnectInterval: 5000
+    }
+  },
   autopauseOnEmpty: true,
-  wsReconnectTries: 5,
-  wsReconnectInterval: 5000,
-  restRetryCount: 3,
-  restTimeout: 5000,
-  lazyLoad: true,
-  lazyLoadTimeout: 5000
+  lazyLoad: {
+    enabled: true,
+    timeout: 5000
+  }
 });
 
 client.once('ready', () => {
@@ -182,7 +195,7 @@ const tera = new Teralink(client, nodes, {
 ---
 
 ## 🤖 Example Bot
-See [`test/exampleBot.js`](./test/exampleBot.js) for a real-world Discord.js bot using Teralink, including play, queue, skip, stop, nowplaying, and real-time lyrics commands.
+See [`test/exampleBot.js`](https://github.com/Ryuzii/Teralink/blob/main/test/exampleBot.js) for a real-world Discord.js bot using Teralink, including play, queue, skip, stop, nowplaying, and real-time lyrics commands, and demonstrating the new clean, nested config style.
 
 ---
 

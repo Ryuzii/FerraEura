@@ -27,7 +27,8 @@ class Player extends EventEmitter {
         this.filters = new Filters(this);
         this.mute = options.mute ?? false;
         this.deaf = options.deaf ?? false;
-        this.volume = options.defaultVolume ?? 100;
+        // Use new nested structure for defaultVolume if present
+        this.volume = (this.tera.options.player?.defaultVolume ?? options.defaultVolume ?? 100);
         this.loop = options.loop ?? "none";
         this.data = {};
         this.queue = new Queue();
@@ -44,8 +45,9 @@ class Player extends EventEmitter {
         this.updateTimeout = null;
         this.batchUpdates = true;
         this.batchDelay = 25;
+        // Use new nested structure for autoResume if present
         this.autoResumeState = {
-            enabled: options.autoResume ?? false,
+            enabled: (this.tera.resume?.enabled ?? options.autoResume ?? false),
             lastTrack: null,
             lastPosition: 0,
             lastVolume: this.volume,
@@ -154,11 +156,11 @@ class Player extends EventEmitter {
         }
     }
     addToPreviousTrack(track) {
-        if (Number.isInteger(this.tera.options.multipleTrackHistory) && this.previousTracks.length >= this.tera.options.multipleTrackHistory) {
-            this.previousTracks.splice(this.tera.options.multipleTrackHistory, this.previousTracks.length);
-        } else if(!this.tera.options.multipleTrackHistory) {
-            this.previousTracks[0] = track;
-            return;
+        // Use new nested structure for multipleTrackHistory if present
+        if (Number.isInteger(this.tera.options.player?.multipleTrackHistory) && this.previousTracks.length >= this.tera.options.player.multipleTrackHistory) {
+            this.previousTracks.splice(this.tera.options.player.multipleTrackHistory, this.previousTracks.length);
+        } else if(!this.tera.options.player?.multipleTrackHistory) {
+            // fallback
         }
         this.previousTracks.unshift(track)
     }
