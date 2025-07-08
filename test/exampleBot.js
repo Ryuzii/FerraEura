@@ -1,15 +1,15 @@
 const { Client, GatewayIntentBits, GatewayDispatchEvents } = require('discord.js');
-const { Teralink } = require('teralink');
+const { Teralink } = require('../build');
 
 // Replace with your bot token and Lavalink node config
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN || 'YOUR_BOT_TOKEN';
 const LAVALINK_NODES = [
   {
     name: 'main',
-    host: 'lavalink.jirayu.net',
-    port: 13592,
-    password: 'youshallnotpass',
-    secure: false,
+    host: 'lavalink.devxcode.in',
+    port: 443,
+    password: 'DevamOP',
+    secure: true,
     regions: ['us', 'eu', 'asia']
   }
 ];
@@ -39,21 +39,31 @@ function send(packet) {
 // Expanded Teralink options for demonstration
 const tera = new Teralink(client, LAVALINK_NODES, {
   send,
-  defaultSearchPlatform: 'ytmsearch',
-  restVersion: 'v4',
+  source: { default: 'spsearch' },
+  rest: {
+    version: 'v4',
+    retryCount: 3,
+    timeout: 5000
+  },
   plugins: [],
   sync: { template: 'Now playing: {title} by {author}' },
-  resumeKey: 'teralink-resume',
-  resumeTimeout: 60000,
-  dynamicNodeSwitching: true,
-  autoReconnectNodes: true,
+  resume: {
+    key: 'teralink-resume',
+    timeout: 60000
+  },
+  node: {
+    dynamicSwitching: true,
+    autoReconnect: true,
+    ws: {
+      reconnectTries: 5,
+      reconnectInterval: 5000
+    }
+  },
   autopauseOnEmpty: true,
-  wsReconnectTries: 5,
-  wsReconnectInterval: 5000,
-  restRetryCount: 3,
-  restTimeout: 5000,
-  lazyLoad: true,
-  lazyLoadTimeout: 5000
+  lazyLoad: {
+    enabled: true,
+    timeout: 5000
+  }
 });
 
 client.once('ready', () => {
