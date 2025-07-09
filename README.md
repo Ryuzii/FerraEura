@@ -25,7 +25,7 @@ Teralink is a next-generation, v4-only Lavalink manager for Discord bots, design
 ---
 
 ## 🌟 Features
-- Super-performant node management and failover
+- Super-performant node management and failover (automatic player migration if a node goes offline)
 - Advanced player controls and queueing
 - Multi-source search (YouTube, Spotify, SoundCloud, Apple Music, and more)
 - TypeScript support and full documentation
@@ -35,6 +35,7 @@ Teralink is a next-generation, v4-only Lavalink manager for Discord bots, design
 - Auto-resume, advanced queue, lyrics (including real-time LRC), and more
 - **Clean, nested config structure for easier setup**
 - **Intelligent caching for super-fast track/playlist resolution**
+- **Automatic player migration (failover):** If a Lavalink node goes offline and dynamicSwitching is enabled, Teralink will automatically move all affected players to a healthy node and resume playback from the last position.
 
 ---
 

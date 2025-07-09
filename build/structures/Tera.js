@@ -153,6 +153,30 @@ class Teralink extends EventEmitter {
         });
       });
     }
+    // --- Begin: Dynamic Node Switching (Failover) ---
+    this.on("nodeDisconnect", (node, event, reason) => {
+      if (!this.dynamicNodeSwitching) return;
+      for (const [guildId, player] of this.players) {
+        if (player.node === node) {
+          const playerData = player.toJSON();
+          this.destroyPlayer(guildId);
+          const newNode = this.leastUsedNodes.find(n => n !== node);
+          if (!newNode) {
+            this.emit("debug", `No healthy node available for failover for guild ${guildId}`);
+            continue;
+          }
+          const newPlayer = require("./Player").Player.fromJSON(this, newNode, playerData);
+          this.players.set(guildId, newPlayer);
+          // Resume playback if there was a current track
+          if (newPlayer.current) {
+            newPlayer.play(newPlayer.current, { position: newPlayer.position });
+          }
+          this.emit("debug", `Migrated player for guild ${guildId} to node ${newNode.name}`);
+          this.emit("playerCreate", newPlayer);
+        }
+      }
+    });
+    // --- End: Dynamic Node Switching (Failover) ---
   }
 
   createNode(options) {
@@ -360,6 +384,10 @@ class Teralink extends EventEmitter {
 
     this.emit("debug", `Searching for ${query} on node \"${requestNode.name}\"`);
     let response = await requestNode.rest.makeRequest("GET", `/${requestNode.rest.version}/loadtracks?identifier=${encodeURIComponent(identifier)}`);
+    // Debug: Log raw Lavalink response for Spotify URLs
+    if (identifier.includes('spotify.com')) {
+      this.emit('debug', `Raw Lavalink response for Spotify: ${JSON.stringify(response, null, 2)}`);
+    }
     // Handle failed requests (like 500 errors)
     if (!response || response.loadType === "error") {
       this.emit("debug", `Search failed for \"${query}\" on node \"${requestNode.name}\": ${response?.data?.message || 'Unknown error'}`);
