@@ -1,6 +1,6 @@
 {
     "name": "teralink",
-    "description": "A next-generation, super-performant, v4-only Lavalink manager for Node.js with advanced features, extensibility, and optimized resource usage.",
+    "description": "A next-generation, super-performant, v4-only Lavalink manager for Node.js with advanced features, smart search, enhanced error handling, performance monitoring, and optimized resource usage.",
     "main": "build/index.js",
     "types": "build/index.d.ts",
     "files": [
@@ -21,7 +21,13 @@
         "http2",
         "optimized",
         "v4",
-        "manager"
+        "manager",
+        "smart-search",
+        "error-handling",
+        "monitoring",
+        "memory-management",
+        "queue-analytics",
+        "typescript"
     ],
     "repository": {
         "type": "git",
@@ -44,7 +50,7 @@
         "undici": "^7.10.0",
         "ws": "^8.18.2"
     },
-    "version": "0.1.1-rc.1",
+    "version": "0.2.0",
     "contributors": [
         {
             "name": "Ryuzii",

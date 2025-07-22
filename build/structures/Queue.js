@@ -97,17 +97,148 @@ class Queue extends Array {
         return removed;
     }
     getStats() {
-        const totalDuration = this.reduce((sum, track) => sum + (track.info.length || 0), 0);
-        const uniqueArtists = new Set(this.map(track => track.info.author)).size;
-        const uniqueSources = new Set(this.map(track => track.info.sourceName)).size;
+        if (this.length === 0) {
+            return {
+                totalTracks: 0,
+                totalDuration: 0,
+                averageDuration: 0,
+                uniqueArtists: 0,
+                uniqueSources: 0,
+                sources: [],
+                uniqueRequesters: 0,
+                estimatedPlaytime: '0:00'
+            };
+        }
+        
+        const totalDuration = this.reduce((sum, track) => sum + (track.info?.length || 0), 0);
+        const uniqueArtists = new Set(this.map(track => track.info?.author).filter(Boolean)).size;
+        const uniqueSources = new Set(this.map(track => track.info?.sourceName).filter(Boolean)).size;
+        const requesters = new Set();
+        
+        this.forEach(track => {
+            if (track.info?.requester) {
+                requesters.add(track.info.requester.id || track.info.requester);
+            }
+        });
+        
         return {
             totalTracks: this.length,
             totalDuration,
-            averageDuration: this.length > 0 ? totalDuration / this.length : 0,
+            averageDuration: this.length > 0 ? Math.round(totalDuration / this.length) : 0,
             uniqueArtists,
             uniqueSources,
-            sources: Array.from(new Set(this.map(track => track.info.sourceName)))
+            sources: Array.from(new Set(this.map(track => track.info?.sourceName).filter(Boolean))),
+            uniqueRequesters: requesters.size,
+            estimatedPlaytime: this.formatDuration(totalDuration)
         };
+    }
+    
+    /**
+     * Enhanced search within the queue
+     * @param {string} query - Search query
+     * @param {Object} options - Search options
+     * @returns {Array} Matching tracks with their indices
+     */
+    searchAdvanced(query, options = {}) {
+        const { limit = 10, fuzzy = true } = options;
+        const normalizedQuery = query.toLowerCase();
+        const results = [];
+        
+        for (let i = 0; i < this.length && results.length < limit; i++) {
+            const track = this[i];
+            const title = track.info?.title?.toLowerCase() || '';
+            const author = track.info?.author?.toLowerCase() || '';
+            
+            let score = 0;
+            
+            // Exact matches get highest score
+            if (title.includes(normalizedQuery) || author.includes(normalizedQuery)) {
+                score = 100;
+            } else if (fuzzy) {
+                // Simple fuzzy matching
+                const titleWords = title.split(' ');
+                const authorWords = author.split(' ');
+                const queryWords = normalizedQuery.split(' ');
+                
+                queryWords.forEach(queryWord => {
+                    titleWords.forEach(titleWord => {
+                        if (titleWord.includes(queryWord) || queryWord.includes(titleWord)) {
+                            score += 50;
+                        }
+                    });
+                    authorWords.forEach(authorWord => {
+                        if (authorWord.includes(queryWord) || queryWord.includes(authorWord)) {
+                            score += 30;
+                        }
+                    });
+                });
+            }
+            
+            if (score > 0) {
+                results.push({ track, index: i, score });
+            }
+        }
+        
+        return results.sort((a, b) => b.score - a.score);
+    }
+    
+    /**
+     * Remove duplicates from queue
+     * @param {string} [criteria='uri'] - Criteria for duplicate detection
+     * @returns {number} Number of duplicates removed
+     */
+    removeDuplicates(criteria = 'uri') {
+        const seen = new Set();
+        const toRemove = [];
+        
+        for (let i = 0; i < this.length; i++) {
+            const track = this[i];
+            let key;
+            
+            switch (criteria) {
+                case 'uri':
+                    key = track.info?.uri;
+                    break;
+                case 'title':
+                    key = track.info?.title?.toLowerCase();
+                    break;
+                case 'identifier':
+                    key = track.info?.identifier;
+                    break;
+                default:
+                    key = track.info?.uri;
+            }
+            
+            if (key && seen.has(key)) {
+                toRemove.push(i);
+            } else if (key) {
+                seen.add(key);
+            }
+        }
+        
+        // Remove duplicates in reverse order to maintain indices
+        for (let i = toRemove.length - 1; i >= 0; i--) {
+            this.splice(toRemove[i], 1);
+        }
+        
+        return toRemove.length;
+    }
+    
+    /**
+     * Format duration in milliseconds to human readable format
+     * @param {number} ms - Duration in milliseconds
+     * @returns {string} Formatted duration
+     */
+    formatDuration(ms) {
+        const seconds = Math.floor(ms / 1000);
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        return `${minutes}:${secs.toString().padStart(2, '0')}`;
     }
     reverse() {
         this.reverse();

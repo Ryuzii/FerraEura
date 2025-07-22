@@ -204,7 +204,8 @@ class Player extends EventEmitter {
             throw error;
         }
     }
-    async play() {
+    async play(retryAttempt = 0) {
+        const maxRetries = 3;
         try {
             if (!this.connected) {
                 throw new Error("Player connection is not initiated. Kindly use Teralink.createConnection() and establish a connection, TIP: Check if Guild Voice States intent is set/provided & 'updateVoiceState' is used in the raw(Gateway Raw) event");
@@ -223,11 +224,52 @@ class Player extends EventEmitter {
                     encoded: track,
                 },
             });
+            
+            // Save auto-resume state on successful play
+            this.saveAutoResumeState();
+            
             return this;
         } catch (err) {
             this.tera.emit('playerError', this, err);
+            
+            // Retry logic for certain errors
+            if (retryAttempt < maxRetries && this.shouldRetryError(err)) {
+                this.tera.emit('debug', this.guildId, `Retrying play operation (attempt ${retryAttempt + 1}/${maxRetries}): ${err.message}`);
+                await this.delay(1000 * (retryAttempt + 1)); // Exponential backoff
+                return this.play(retryAttempt + 1);
+            }
+            
             throw err;
         }
+    }
+    
+    /**
+     * Determine if an error should trigger a retry
+     * @param {Error} error - The error to check
+     * @returns {boolean} Whether to retry
+     */
+    shouldRetryError(error) {
+        const retryableErrors = [
+            'timeout',
+            'network',
+            'ECONNRESET',
+            'ENOTFOUND',
+            'ETIMEDOUT',
+            'socket hang up'
+        ];
+        
+        return retryableErrors.some(pattern => 
+            error.message.toLowerCase().includes(pattern.toLowerCase())
+        );
+    }
+    
+    /**
+     * Delay helper for retry logic
+     * @param {number} ms - Milliseconds to delay
+     * @returns {Promise} Promise that resolves after delay
+     */
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
     async restart() {
         try {

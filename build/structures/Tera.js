@@ -31,7 +31,8 @@ class Teralink extends EventEmitter {
     super();
     if (!client) throw new Error("Client is required to initialize Teralink");
     if (!Array.isArray(nodes)) throw new Error("Nodes must be an array");
-    if (!options.send || typeof options.send !== "function") throw new Error("Send function is required");
+    if (!options.send || typeof options.send !== "function")
+      throw new Error("Send function is required");
     this.client = client;
     this.nodes = nodes;
     this.nodeMap = new Map();
@@ -43,34 +44,49 @@ class Teralink extends EventEmitter {
 
     // --- Begin: New Options Structure Migration ---
     // Source
-    this.source = options.source || { default: options.defaultSearchPlatform || "ytmsearch" };
+    this.source = options.source || {
+      default: options.defaultSearchPlatform || "ytmsearch",
+    };
     // REST
     this.rest = options.rest || {
       version: options.restVersion || SUPPORTED_VERSION,
       retryCount: options.restRetryCount || 3,
-      timeout: options.restTimeout || 5000
+      timeout: options.restTimeout || 5000,
     };
     // Plugins
     this.plugins = options.plugins || [];
     // Resume
     this.resume = options.resume || {
       key: options.resumeKey || "teralink-resume",
-      timeout: options.resumeTimeout || 60_000
+      timeout: options.resumeTimeout || 60_000,
     };
     // Node
     this.node = options.node || {
-      dynamicSwitching: options.dynamicNodeSwitching !== undefined ? options.dynamicNodeSwitching : true,
-      autoReconnect: options.autoReconnectNodes !== undefined ? options.autoReconnectNodes : true,
+      dynamicSwitching:
+        options.dynamicNodeSwitching !== undefined
+          ? options.dynamicNodeSwitching
+          : true,
+      autoReconnect:
+        options.autoReconnectNodes !== undefined
+          ? options.autoReconnectNodes
+          : true,
       ws: {
         reconnectTries: options.wsReconnectTries || 5,
-        reconnectInterval: options.wsReconnectInterval || 5000
-      }
+        reconnectInterval: options.wsReconnectInterval || 5000,
+      },
     };
     // Autopause
-    this.autopauseOnEmpty = options.autopauseOnEmpty !== undefined ? options.autopauseOnEmpty : true;
+    this.autopauseOnEmpty =
+      options.autopauseOnEmpty !== undefined ? options.autopauseOnEmpty : true;
     // Lazy Load
-    this.lazyLoad = (options.lazyLoad && typeof options.lazyLoad === 'object') ? options.lazyLoad.enabled : (options.lazyLoad || false);
-    this.lazyLoadTimeout = (options.lazyLoad && typeof options.lazyLoad === 'object') ? options.lazyLoad.timeout : (options.lazyLoadTimeout || 5000);
+    this.lazyLoad =
+      options.lazyLoad && typeof options.lazyLoad === "object"
+        ? options.lazyLoad.enabled
+        : options.lazyLoad || false;
+    this.lazyLoadTimeout =
+      options.lazyLoad && typeof options.lazyLoad === "object"
+        ? options.lazyLoad.timeout
+        : options.lazyLoadTimeout || 5000;
     // Sync
     this.sync = options.sync;
     // --- End: New Options Structure Migration ---
@@ -90,12 +106,38 @@ class Teralink extends EventEmitter {
     this.nodeHealthCache = new Map();
     this.cacheTimeout = 30_000;
     this.resolveCache = new Map(); // { identifier: { result, timestamp } }
-    this.resolveCacheMaxSize = 200;
-    this.resolveCacheTTL = 5 * 60 * 1000; // 5 minutes
+    this.resolveCacheMaxSize = 500; // Increased cache size
+    this.resolveCacheTTL = 10 * 60 * 1000; // Increased to 10 minutes
+
+    // Performance monitoring
+    this.performanceMetrics = {
+      searchRequests: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+      playerCreations: 0,
+      nodeReconnections: 0,
+      lastResetTime: Date.now(),
+    };
+
+    // Memory management
+    this.memoryOptimization = {
+      enabled: true,
+      cleanupInterval: 15 * 60 * 1000, // 15 minutes
+      maxInactiveTime: 30 * 60 * 1000, // 30 minutes
+      memoryThreshold: 85, // percentage
+    };
+
+    // Enhanced connection pooling
+    this.connectionPool = {
+      maxConcurrentRequests: 50,
+      requestQueue: [],
+      activeRequests: 0,
+      rateLimitedNodes: new Set(),
+    };
     // Only statusSync (voice channel status)
     if (this.sync === true) {
       this.statusSync = new Status(this.client);
-    } else if (typeof this.sync === 'object' && this.sync !== null) {
+    } else if (typeof this.sync === "object" && this.sync !== null) {
       this.statusSync = new Status(this.client, this.sync);
     } else {
       this.statusSync = null;
@@ -108,7 +150,7 @@ class Teralink extends EventEmitter {
   pruneResolveCache() {
     const now = Date.now();
     for (const [key, value] of this.resolveCache.entries()) {
-      if ((now - value.timestamp) > this.resolveCacheTTL) {
+      if (now - value.timestamp > this.resolveCacheTTL) {
         this.resolveCache.delete(key);
       }
     }
@@ -116,6 +158,137 @@ class Teralink extends EventEmitter {
     while (this.resolveCache.size > this.resolveCacheMaxSize) {
       const firstKey = this.resolveCache.keys().next().value;
       this.resolveCache.delete(firstKey);
+    }
+  }
+
+  /**
+   * Get performance metrics and statistics
+   * @returns {Object} Performance metrics object
+   */
+  getPerformanceMetrics() {
+    const uptime = Date.now() - this.performanceMetrics.lastResetTime;
+    const cacheHitRate =
+      (this.performanceMetrics.cacheHits /
+        (this.performanceMetrics.cacheHits +
+          this.performanceMetrics.cacheMisses)) *
+      100;
+
+    return {
+      ...this.performanceMetrics,
+      uptime,
+      cacheHitRate: isNaN(cacheHitRate)
+        ? 0
+        : Math.round(cacheHitRate * 100) / 100,
+      averageSearchesPerMinute: Math.round(
+        (this.performanceMetrics.searchRequests / uptime) * 60000
+      ),
+      memoryUsage: this.getMemoryUsage(),
+      activeConnections: this.connectionPool.activeRequests,
+      queuedRequests: this.connectionPool.requestQueue.length,
+    };
+  }
+
+  /**
+   * Reset performance metrics
+   */
+  resetPerformanceMetrics() {
+    this.performanceMetrics = {
+      searchRequests: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+      playerCreations: 0,
+      nodeReconnections: 0,
+      lastResetTime: Date.now(),
+    };
+    this.emit("debug", "Performance metrics reset");
+  }
+
+  /**
+   * Get memory usage information
+   * @returns {Object} Memory usage data
+   */
+  getMemoryUsage() {
+    const memUsage = process.memoryUsage();
+    return {
+      heapUsed: Math.round((memUsage.heapUsed / 1024 / 1024) * 100) / 100,
+      heapTotal: Math.round((memUsage.heapTotal / 1024 / 1024) * 100) / 100,
+      external: Math.round((memUsage.external / 1024 / 1024) * 100) / 100,
+      rss: Math.round((memUsage.rss / 1024 / 1024) * 100) / 100,
+      heapUsagePercentage: Math.round(
+        (memUsage.heapUsed / memUsage.heapTotal) * 100
+      ),
+    };
+  }
+
+  /**
+   * Perform memory cleanup and optimization
+   */
+  performMemoryCleanup() {
+    if (!this.memoryOptimization.enabled) return;
+
+    const now = Date.now();
+    let cleanedPlayers = 0;
+
+    // Clean up inactive players
+    for (const [guildId, player] of this.players.entries()) {
+      const inactiveTime = now - player.timestamp;
+      if (
+        inactiveTime > this.memoryOptimization.maxInactiveTime &&
+        !player.playing &&
+        player.queue.length === 0
+      ) {
+        this.emit("debug", `Cleaning up inactive player for guild ${guildId}`);
+        player.destroy();
+        cleanedPlayers++;
+      }
+    }
+
+    // Prune caches
+    this.pruneResolveCache();
+    this.regionCache.clear();
+    this.nodeHealthCache.clear();
+
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+
+    this.emit(
+      "debug",
+      `Memory cleanup completed. Cleaned ${cleanedPlayers} inactive players`
+    );
+  }
+
+  /**
+   * Start automatic memory management
+   */
+  startMemoryManagement() {
+    if (this.memoryCleanupInterval) return;
+
+    this.memoryCleanupInterval = setInterval(() => {
+      const memUsage = this.getMemoryUsage();
+      if (
+        memUsage.heapUsagePercentage > this.memoryOptimization.memoryThreshold
+      ) {
+        this.emit(
+          "debug",
+          `Memory threshold exceeded (${memUsage.heapUsagePercentage}%), performing cleanup`
+        );
+        this.performMemoryCleanup();
+      }
+    }, this.memoryOptimization.cleanupInterval);
+
+    this.emit("debug", "Automatic memory management started");
+  }
+
+  /**
+   * Stop automatic memory management
+   */
+  stopMemoryManagement() {
+    if (this.memoryCleanupInterval) {
+      clearInterval(this.memoryCleanupInterval);
+      this.memoryCleanupInterval = null;
+      this.emit("debug", "Automatic memory management stopped");
     }
   }
 
@@ -129,11 +302,18 @@ class Teralink extends EventEmitter {
     this.clientId = clientId;
     this.nodes.forEach((node) => this.createNode(node));
     this.initiated = true;
-    this.emit("debug", `Teralink initialized, connecting to ${this.nodes.length} node(s)`);
+    this.emit(
+      "debug",
+      `Teralink initialized, connecting to ${this.nodes.length} node(s)`
+    );
+
+    // Start performance monitoring and memory management
+    this.startMemoryManagement();
+
     if (this.plugins) {
       this.emit("debug", `Loading ${this.plugins.length} Teralink plugin(s)`);
       this.plugins.forEach((plugin) => {
-        if (plugin instanceof Plugin && typeof plugin.load === 'function') {
+        if (plugin instanceof Plugin && typeof plugin.load === "function") {
           plugin.load(this);
           this.pluginInstances.push(plugin);
         }
@@ -141,8 +321,8 @@ class Teralink extends EventEmitter {
     }
     // Status sync integration
     if (this.statusSync) {
-      this.on("playerCreate", player => {
-        player.on("trackStart", track => {
+      this.on("playerCreate", (player) => {
+        player.on("trackStart", (track) => {
           this.statusSync.setVoiceStatus(player.voiceChannel, track.info);
         });
         player.on("trackEnd", () => {
@@ -160,18 +340,28 @@ class Teralink extends EventEmitter {
         if (player.node === node) {
           const playerData = player.toJSON();
           this.destroyPlayer(guildId);
-          const newNode = this.leastUsedNodes.find(n => n !== node);
+          const newNode = this.leastUsedNodes.find((n) => n !== node);
           if (!newNode) {
-            this.emit("debug", `No healthy node available for failover for guild ${guildId}`);
+            this.emit(
+              "debug",
+              `No healthy node available for failover for guild ${guildId}`
+            );
             continue;
           }
-          const newPlayer = require("./Player").Player.fromJSON(this, newNode, playerData);
+          const newPlayer = require("./Player").Player.fromJSON(
+            this,
+            newNode,
+            playerData
+          );
           this.players.set(guildId, newPlayer);
           // Resume playback if there was a current track
           if (newPlayer.current) {
             newPlayer.play(newPlayer.current, { position: newPlayer.position });
           }
-          this.emit("debug", `Migrated player for guild ${guildId} to node ${newNode.name}`);
+          this.emit(
+            "debug",
+            `Migrated player for guild ${guildId} to node ${newNode.name}`
+          );
           this.emit("playerCreate", newPlayer);
         }
       }
@@ -211,13 +401,13 @@ class Teralink extends EventEmitter {
     const now = Date.now();
     // Prune regionCache
     for (const [key, value] of this.regionCache.entries()) {
-      if ((now - value.timestamp) > this.cacheTimeout) {
+      if (now - value.timestamp > this.cacheTimeout) {
         this.regionCache.delete(key);
       }
     }
     // Prune nodeHealthCache
     for (const [key, value] of this.nodeHealthCache.entries()) {
-      if ((now - value.timestamp) > this.cacheTimeout) {
+      if (now - value.timestamp > this.cacheTimeout) {
         this.nodeHealthCache.delete(key);
       }
     }
@@ -227,14 +417,14 @@ class Teralink extends EventEmitter {
     this.pruneCaches();
     const now = Date.now();
     const cached = this.nodeHealthCache.get(node.name);
-    if (cached && (now - cached.timestamp) < this.cacheTimeout) {
+    if (cached && now - cached.timestamp < this.cacheTimeout) {
       return cached.health;
     }
     const health = node.getHealthStatus();
     const score = this.calculateNodeScore(health);
     this.nodeHealthCache.set(node.name, {
       health: { ...health, score },
-      timestamp: now
+      timestamp: now,
     });
     return { ...health, score };
   }
@@ -255,11 +445,14 @@ class Teralink extends EventEmitter {
     const now = Date.now();
     const cacheKey = `region_${region}`;
     const cached = this.regionCache.get(cacheKey);
-    if (cached && (now - cached.timestamp) < this.cacheTimeout) {
+    if (cached && now - cached.timestamp < this.cacheTimeout) {
       return cached.nodes;
     }
     const nodesByRegion = [...this.nodeMap.values()]
-      .filter((node) => node.connected && node.regions?.includes(region?.toLowerCase()))
+      .filter(
+        (node) =>
+          node.connected && node.regions?.includes(region?.toLowerCase())
+      )
       .sort((a, b) => {
         const aHealth = this.getNodeHealth(a);
         const bHealth = this.getNodeHealth(b);
@@ -267,7 +460,7 @@ class Teralink extends EventEmitter {
       });
     this.regionCache.set(cacheKey, {
       nodes: nodesByRegion,
-      timestamp: now
+      timestamp: now,
     });
     return nodesByRegion;
   }
@@ -278,10 +471,12 @@ class Teralink extends EventEmitter {
   }
 
   createConnection(options) {
-    if (!this.initiated) throw new Error("You have to initialize Teralink in your ready event");
+    if (!this.initiated)
+      throw new Error("You have to initialize Teralink in your ready event");
     const player = this.players.get(options.guildId);
     if (player) return player;
-    if (this.leastUsedNodes.length === 0) throw new Error("No nodes are available");
+    if (this.leastUsedNodes.length === 0)
+      throw new Error("No nodes are available");
     let node;
     if (options.region) {
       node = this.getBestNodeForRegion(options.region);
@@ -293,10 +488,14 @@ class Teralink extends EventEmitter {
   }
 
   createPlayer(node, options) {
+    this.performanceMetrics.playerCreations++;
     const player = new Player(this, node, options);
     this.players.set(options.guildId, player);
     player.connect(options);
-    this.emit('debug', `Created a player (${options.guildId}) on node ${node.name}`);
+    this.emit(
+      "debug",
+      `Created a player (${options.guildId}) on node ${node.name}`
+    );
     this.emit("playerCreate", player);
     return player;
   }
@@ -316,14 +515,17 @@ class Teralink extends EventEmitter {
 
   async loadPlayersState(filePath) {
     try {
-      const data = await fs.readFile(filePath, 'utf8');
+      const data = await fs.readFile(filePath, "utf8");
       const playersData = JSON.parse(data);
       let loadedCount = 0;
       for (const [guildId, playerData] of Object.entries(playersData)) {
         try {
           const node = this.leastUsedNodes[0];
           if (!node) {
-            this.emit("debug", `No available nodes to restore player for guild ${guildId}`);
+            this.emit(
+              "debug",
+              `No available nodes to restore player for guild ${guildId}`
+            );
             continue;
           }
           const player = Player.fromJSON(this, node, playerData);
@@ -335,13 +537,19 @@ class Teralink extends EventEmitter {
           this.emit("playerCreate", player);
           this.emit("debug", `Restored player for guild ${guildId}`);
         } catch (error) {
-          this.emit("debug", `Failed to restore player for guild ${guildId}: ${error.message}`);
+          this.emit(
+            "debug",
+            `Failed to restore player for guild ${guildId}: ${error.message}`
+          );
         }
       }
-      this.emit("debug", `Loaded ${loadedCount} player states from ${filePath}`);
+      this.emit(
+        "debug",
+        `Loaded ${loadedCount} player states from ${filePath}`
+      );
       return loadedCount;
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (error.code === "ENOENT") {
         this.emit("debug", `No player state file found at ${filePath}`);
         return 0;
       }
@@ -364,10 +572,19 @@ class Teralink extends EventEmitter {
    * @returns {Promise<{ loadType: string, tracks: any[], playlistInfo: any }>} - Lavalink response
    */
   async resolve({ query, source, requester, node }) {
-    if (!this.initiated) throw new Error("You have to initialize Teralink in your ready event");
-    if (node && (typeof node !== "string" && !(node instanceof Node))) throw new Error(`'node' property must either be a node identifier/name (string) or a Node instance, but received: ${typeof node}`);
+    const startTime = Date.now();
+    this.performanceMetrics.searchRequests++;
+
+    if (!this.initiated)
+      throw new Error("You have to initialize Teralink in your ready event");
+    if (node && typeof node !== "string" && !(node instanceof Node))
+      throw new Error(
+        `'node' property must either be a node identifier/name (string) or a Node instance, but received: ${typeof node}`
+      );
     const querySource = source || this.defaultSearchPlatform;
-    const requestNode = (node && typeof node === 'string' ? this.nodeMap.get(node) : node) || this.leastUsedNodes[0];
+    const requestNode =
+      (node && typeof node === "string" ? this.nodeMap.get(node) : node) ||
+      this.leastUsedNodes[0];
     if (!requestNode) throw new Error("No nodes are available.");
     const regex = /^https?:\/\//;
     const identifier = regex.test(query) ? query : `${querySource}:${query}`;
@@ -376,70 +593,254 @@ class Teralink extends EventEmitter {
     this.pruneResolveCache();
     const cacheKey = identifier;
     const cached = this.resolveCache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp) < this.resolveCacheTTL) {
-      this.emit("debug", `Cache hit for resolve: ${identifier}`);
+    if (cached && Date.now() - cached.timestamp < this.resolveCacheTTL) {
+      this.performanceMetrics.cacheHits++;
+      this.emit(
+        "debug",
+        `Cache hit for resolve: ${identifier} (${Date.now() - startTime}ms)`
+      );
       return cached.result;
     }
+    this.performanceMetrics.cacheMisses++;
     // --- End: Caching logic ---
 
-    this.emit("debug", `Searching for ${query} on node \"${requestNode.name}\"`);
-    let response = await requestNode.rest.makeRequest("GET", `/${requestNode.rest.version}/loadtracks?identifier=${encodeURIComponent(identifier)}`);
+    this.emit(
+      "debug",
+      `Searching for ${query} on node \"${requestNode.name}\"`
+    );
+    let response = await requestNode.rest.makeRequest(
+      "GET",
+      `/${requestNode.rest.version}/loadtracks?identifier=${encodeURIComponent(
+        identifier
+      )}`
+    );
     // Debug: Log raw Lavalink response for Spotify URLs
-    if (identifier.includes('spotify.com')) {
-      this.emit('debug', `Raw Lavalink response for Spotify: ${JSON.stringify(response, null, 2)}`);
+    if (identifier.includes("spotify.com")) {
+      this.emit(
+        "debug",
+        `Raw Lavalink response for Spotify: ${JSON.stringify(
+          response,
+          null,
+          2
+        )}`
+      );
     }
     // Handle failed requests (like 500 errors)
     if (!response || response.loadType === "error") {
-      this.emit("debug", `Search failed for \"${query}\" on node \"${requestNode.name}\": ${response?.data?.message || 'Unknown error'}`);
+      this.emit(
+        "debug",
+        `Search failed for \"${query}\" on node \"${requestNode.name}\": ${
+          response?.data?.message || "Unknown error"
+        }`
+      );
       // Try fallback search if it's a URL
       if (regex.test(query)) {
         this.emit("debug", `Attempting fallback search for \"${query}\"`);
         const fallbackIdentifier = `${querySource}:${query}`;
-        response = await requestNode.rest.makeRequest("GET", `/${requestNode.rest.version}/loadtracks?identifier=${encodeURIComponent(fallbackIdentifier)}`);
+        response = await requestNode.rest.makeRequest(
+          "GET",
+          `/${
+            requestNode.rest.version
+          }/loadtracks?identifier=${encodeURIComponent(fallbackIdentifier)}`
+        );
       }
       if (!response || response.loadType === "error") {
-        throw new Error(response?.data?.message || 'Failed to load tracks');
+        throw new Error(response?.data?.message || "Failed to load tracks");
       }
     }
     // Try to resolve identifiers for Spotify/YouTube if no matches
     if (response.loadType === "empty" || response.loadType === "NO_MATCHES") {
-      response = await requestNode.rest.makeRequest("GET", `/${requestNode.rest.version}/loadtracks?identifier=https://open.spotify.com/track/${query}`);
+      response = await requestNode.rest.makeRequest(
+        "GET",
+        `/${requestNode.rest.version}/loadtracks?identifier=https://open.spotify.com/track/${query}`
+      );
       if (response.loadType === "empty" || response.loadType === "NO_MATCHES") {
-        response = await requestNode.rest.makeRequest("GET", `/${requestNode.rest.version}/loadtracks?identifier=https://www.youtube.com/watch?v=${query}`);
+        response = await requestNode.rest.makeRequest(
+          "GET",
+          `/${requestNode.rest.version}/loadtracks?identifier=https://www.youtube.com/watch?v=${query}`
+        );
       }
     }
     let tracks = [];
     let playlistInfo = null;
     if (requestNode.rest.version === "v4") {
       if (response.loadType === "track") {
-        tracks = response.data ? [new (require("./Track").Track)(response.data, requester, requestNode)] : [];
-        this.emit("debug", `Search Success for \"${query}\" on node \"${requestNode.name}\", loadType: ${response.loadType}, Resulted track Title: ${tracks[0]?.info?.title}`);
+        tracks = response.data
+          ? [
+              new (require("./Track").Track)(
+                response.data,
+                requester,
+                requestNode
+              ),
+            ]
+          : [];
+        this.emit(
+          "debug",
+          `Search Success for \"${query}\" on node \"${requestNode.name}\", loadType: ${response.loadType}, Resulted track Title: ${tracks[0]?.info?.title}`
+        );
       } else if (response.loadType === "playlist") {
         const trackData = response.data?.tracks || [];
-        tracks = await Promise.all(trackData.map(track => Promise.resolve(new (require("./Track").Track)(track, requester, requestNode))));
+        tracks = await Promise.all(
+          trackData.map((track) =>
+            Promise.resolve(
+              new (require("./Track").Track)(track, requester, requestNode)
+            )
+          )
+        );
         playlistInfo = response.data?.info || null;
-        this.emit("debug", `Search Success for \"${query}\" on node \"${requestNode.name}\", loadType: ${response.loadType} tracks: ${tracks.length}`);
+        this.emit(
+          "debug",
+          `Search Success for \"${query}\" on node \"${requestNode.name}\", loadType: ${response.loadType} tracks: ${tracks.length}`
+        );
       } else {
-        const trackData = response.loadType === "search" && response.data ? response.data : [];
-        tracks = await Promise.all(trackData.map(track => Promise.resolve(new (require("./Track").Track)(track, requester, requestNode))));
-        this.emit("debug", `Search ${response.loadType !== "error" ? "Success" : "Failed"} for \"${query}\" on node \"${requestNode.name}\", loadType: ${response.loadType} tracks: ${tracks.length}`);
+        const trackData =
+          response.loadType === "search" && response.data ? response.data : [];
+        tracks = await Promise.all(
+          trackData.map((track) =>
+            Promise.resolve(
+              new (require("./Track").Track)(track, requester, requestNode)
+            )
+          )
+        );
+        this.emit(
+          "debug",
+          `Search ${
+            response.loadType !== "error" ? "Success" : "Failed"
+          } for \"${query}\" on node \"${requestNode.name}\", loadType: ${
+            response.loadType
+          } tracks: ${tracks.length}`
+        );
       }
     } else {
       // v3 (legacy)
       const trackData = response?.tracks || [];
-      tracks = await Promise.all(trackData.map(track => Promise.resolve(new (require("./Track").Track)(track, requester, requestNode))));
-      this.emit("debug", `Search ${response.loadType !== "error" && response.loadType !== "LOAD_FAILED" ? "Success" : "Failed"} for \"${query}\" on node \"${requestNode.name}\", loadType: ${response.loadType} tracks: ${tracks.length}`);
+      tracks = await Promise.all(
+        trackData.map((track) =>
+          Promise.resolve(
+            new (require("./Track").Track)(track, requester, requestNode)
+          )
+        )
+      );
+      this.emit(
+        "debug",
+        `Search ${
+          response.loadType !== "error" && response.loadType !== "LOAD_FAILED"
+            ? "Success"
+            : "Failed"
+        } for \"${query}\" on node \"${requestNode.name}\", loadType: ${
+          response.loadType
+        } tracks: ${tracks.length}`
+      );
     }
     const result = {
       loadType: response.loadType,
       tracks,
-      playlistInfo
+      playlistInfo,
     };
     // --- Store in cache ---
     this.resolveCache.set(cacheKey, { result, timestamp: Date.now() });
     this.pruneResolveCache();
     // --- End cache store ---
+
+    // Log performance metrics
+    const totalTime = Date.now() - startTime;
+    this.emit(
+      "debug",
+      `Search completed for "${query}" in ${totalTime}ms (${tracks.length} tracks)`
+    );
+
     return result;
+  }
+
+  /**
+   * Smart search with enhanced query processing and source detection
+   * @param {string} query - Search query
+   * @param {*} requester - User making the request
+   * @param {Object} options - Search options
+   * @param {string} [options.source] - Preferred source
+   * @param {boolean} [options.smartSearch=true] - Enable smart search features
+   * @param {number} [options.limit=10] - Maximum results
+   * @returns {Promise<Object>} Search results
+   */
+  async smartSearch(query, requester, options = {}) {
+    const { source, smartSearch = true, limit = 10 } = options;
+
+    if (!smartSearch) {
+      return this.resolve({ query, source, requester });
+    }
+
+    // Detect URL patterns and optimize source selection
+    const urlPatterns = {
+      youtube:
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/playlist\?list=)/i,
+      spotify: /(?:open\.spotify\.com|spotify:)/i,
+      soundcloud: /soundcloud\.com/i,
+      bandcamp: /bandcamp\.com/i,
+      twitch: /twitch\.tv/i,
+    };
+
+    let detectedSource = source;
+
+    // Auto-detect source from URL
+    if (!detectedSource) {
+      for (const [platform, pattern] of Object.entries(urlPatterns)) {
+        if (pattern.test(query)) {
+          detectedSource =
+            platform === "youtube" ? "ytsearch" : `${platform}search`;
+          break;
+        }
+      }
+    }
+
+    // Enhance query for better results
+    let enhancedQuery = query;
+    if (!urlPatterns.youtube.test(query) && !urlPatterns.spotify.test(query)) {
+      // Clean up common phrases that might interfere with search
+      enhancedQuery = query
+        .replace(/\b(official|music|video|audio|lyrics|hd|hq)\b/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    const searchResults = await this.resolve({
+      query: enhancedQuery,
+      source: detectedSource || this.defaultSearchPlatform,
+      requester,
+    });
+
+    // Limit results if requested
+    if (limit && searchResults.tracks && searchResults.tracks.length > limit) {
+      searchResults.tracks = searchResults.tracks.slice(0, limit);
+    }
+
+    return searchResults;
+  }
+
+  /**
+   * Batch search multiple queries efficiently
+   * @param {Array<string>} queries - Array of search queries
+   * @param {*} requester - User making the request
+   * @param {Object} options - Search options
+   * @returns {Promise<Array>} Array of search results
+   */
+  async batchSearch(queries, requester, options = {}) {
+    const batchSize = 5; // Process 5 at a time to avoid overwhelming nodes
+    const results = [];
+
+    for (let i = 0; i < queries.length; i += batchSize) {
+      const batch = queries.slice(i, i + batchSize);
+      const batchPromises = batch.map((query) =>
+        this.smartSearch(query, requester, options).catch((error) => ({
+          error: error.message,
+          query,
+        }))
+      );
+
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+    }
+
+    return results;
   }
 
   /**
@@ -447,7 +848,8 @@ class Teralink extends EventEmitter {
    * @param {Object} packet - Discord voice state/voice server update packet
    */
   updateVoiceState(packet) {
-    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
+    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
+      return;
     const player = this.players.get(packet.d.guild_id);
     if (!player) return;
     if (packet.t === "VOICE_SERVER_UPDATE") {
@@ -472,17 +874,28 @@ class Teralink extends EventEmitter {
 
   getSystemHealth() {
     const nodesHealth = this.getNodesHealth();
-    const connectedNodes = Object.values(nodesHealth).filter(h => h.connected);
-    const totalPlayers = Object.values(nodesHealth).reduce((sum, h) => sum + h.players, 0);
-    const totalPlayingPlayers = Object.values(nodesHealth).reduce((sum, h) => sum + h.playingPlayers, 0);
+    const connectedNodes = Object.values(nodesHealth).filter(
+      (h) => h.connected
+    );
+    const totalPlayers = Object.values(nodesHealth).reduce(
+      (sum, h) => sum + h.players,
+      0
+    );
+    const totalPlayingPlayers = Object.values(nodesHealth).reduce(
+      (sum, h) => sum + h.playingPlayers,
+      0
+    );
     return {
       totalNodes: Object.keys(nodesHealth).length,
       connectedNodes: connectedNodes.length,
       totalPlayers,
       totalPlayingPlayers,
-      averagePing: connectedNodes.length > 0 ? 
-        connectedNodes.reduce((sum, h) => sum + h.averagePing, 0) / connectedNodes.length : 0,
-      nodesHealth
+      averagePing:
+        connectedNodes.length > 0
+          ? connectedNodes.reduce((sum, h) => sum + h.averagePing, 0) /
+            connectedNodes.length
+          : 0,
+      nodesHealth,
     };
   }
 
@@ -502,7 +915,10 @@ class Teralink extends EventEmitter {
         }
       }
       await fs.writeFile(filePath, JSON.stringify(playersData, null, 2));
-      this.emit("debug", `Saved ${Object.keys(playersData).length} player states to ${filePath}`);
+      this.emit(
+        "debug",
+        `Saved ${Object.keys(playersData).length} player states to ${filePath}`
+      );
       return playersData;
     } catch (error) {
       this.emit("debug", `Failed to save player states: ${error.message}`);
@@ -515,11 +931,11 @@ class Teralink extends EventEmitter {
     this.removeAllListeners();
     for (const player of this.players.values()) {
       player.removeAllListeners && player.removeAllListeners();
-      if (typeof player.destroy === 'function') player.destroy();
+      if (typeof player.destroy === "function") player.destroy();
     }
     for (const node of this.nodeMap.values()) {
       node.removeAllListeners && node.removeAllListeners();
-      if (typeof node.destroy === 'function') node.destroy();
+      if (typeof node.destroy === "function") node.destroy();
     }
     this.players.clear();
     this.nodeMap.clear();
@@ -533,4 +949,4 @@ class Teralink extends EventEmitter {
   }
 }
 
-module.exports = { Teralink }; 
+module.exports = { Teralink };

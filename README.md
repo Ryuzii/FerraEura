@@ -25,10 +25,20 @@ Teralink is a next-generation, v4-only Lavalink manager for Discord bots, design
 ---
 
 ## 🌟 Features
+
+### 🔥 New in v0.2.0
+- **🧠 Smart Search**: Automatic source detection from URLs and query enhancement for better results
+- **🛡️ Enhanced Error Handling**: Intelligent retry logic with exponential backoff for network errors
+- **📊 Performance Monitoring**: Real-time metrics tracking including cache hit rates and memory usage
+- **🧹 Automatic Memory Management**: Intelligent cleanup and leak prevention with configurable thresholds
+- **📋 Advanced Queue Analytics**: Comprehensive statistics, search functionality, and duplicate detection
+- **⚡ Enhanced Caching**: 2.5x larger cache with longer TTL for improved performance
+
+### 🎵 Core Features
 - Super-performant node management and failover (automatic player migration if a node goes offline)
-- Advanced player controls and queueing
+- Advanced player controls and queueing with real-time analytics
 - Multi-source search (YouTube, Spotify, SoundCloud, Apple Music, and more)
-- TypeScript support and full documentation
+- TypeScript support and comprehensive documentation
 - Plugin system for extensibility
 - Real-time voice channel status sync (statusSync)
 - Region-aware node selection and health diagnostics
@@ -153,13 +163,54 @@ player.queue.remove(2); // Remove track at index 2
 console.log(player.queue.toArray());
 ```
 
-### 🔍 Search Abstraction
+### 🧠 Smart Search (New in v0.2.0)
 ```js
-// Auto-detects source (YouTube, SoundCloud, Spotify, Apple Music)
+// Smart search with automatic source detection and query enhancement
+const results = await tera.smartSearch('https://open.spotify.com/track/xyz', user);
+const enhanced = await tera.smartSearch('lofi hip hop official music video', user, {
+  limit: 5,
+  smartSearch: true
+});
+
+// Batch search for multiple queries
+const queries = ['song1', 'song2', 'song3'];
+const batchResults = await tera.batchSearch(queries, user, { limit: 10 });
+
+// Traditional search still available
 const yt = await tera.search('ytsearch:lofi hip hop', user);
 const sc = await tera.search('scsearch:chill beats', user);
-const sp = await tera.search('https://open.spotify.com/track/xyz', user);
-const am = await tera.search('https://music.apple.com/us/album/xyz', user);
+```
+
+### 📊 Performance Monitoring (New in v0.2.0)
+```js
+// Get comprehensive performance metrics
+const metrics = tera.getPerformanceMetrics();
+console.log('Cache Hit Rate:', metrics.cacheHitRate + '%');
+console.log('Memory Usage:', metrics.memoryUsage.heapUsagePercentage + '%');
+
+// Memory management
+const memory = tera.getMemoryUsage();
+tera.performMemoryCleanup(); // Manual cleanup
+tera.resetPerformanceMetrics();
+```
+
+### 📋 Advanced Queue Analytics (New in v0.2.0)
+```js
+// Comprehensive queue statistics
+const stats = player.queue.getStats();
+console.log('Total tracks:', stats.totalTracks);
+console.log('Estimated playtime:', stats.estimatedPlaytime);
+console.log('Unique artists:', stats.uniqueArtists);
+
+// Advanced search within queue
+const searchResults = player.queue.searchAdvanced('lofi', {
+  limit: 5,
+  fuzzy: true
+});
+
+// Queue optimization
+const removedCount = player.queue.removeDuplicates('uri');
+await player.queue.shuffleAsync();
 ```
 
 ### 📢 Events
@@ -190,8 +241,15 @@ const tera = new Teralink(client, nodes, {
 ---
 
 ## 📝 TypeScript Support
-- Full types for all classes, options, and events.
-- See `build/index.d.ts` for details and autocompletion.
+- Full types for all classes, options, and events
+- Enhanced TypeScript definitions for v0.2.0 features
+- See `build/index.d.ts` for details and autocompletion
+
+## 📖 Documentation
+- **[Complete Documentation](docs/docs.html)** - Comprehensive guide with examples
+- **[API Reference](docs/api.md)** - Detailed API documentation
+- **[Examples](docs/examples.md)** - Code examples and use cases
+- **[Migration Guide](docs/docs.html#migration)** - Upgrading from v0.1.x to v0.2.0
 
 ---
 

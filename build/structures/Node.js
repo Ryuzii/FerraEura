@@ -66,6 +66,25 @@ class Node {
         this.lastPing = 0;
         this.pingHistory = [];
         this.maxPingHistory = 10;
+        
+        // Enhanced error tracking and health monitoring
+        this.errorCount = 0;
+        this.lastErrorTime = null;
+        this.healthMetrics = {
+            successfulConnections: 0,
+            failedConnections: 0,
+            disconnections: 0,
+            averageResponseTime: 0,
+            lastHealthCheck: Date.now()
+        };
+        
+        // Connection stability tracking
+        this.connectionStability = {
+            consecutiveFailures: 0,
+            maxConsecutiveFailures: 5,
+            backoffMultiplier: 1,
+            maxBackoffMultiplier: 8
+        };
     }
 
     constructWsUrl() {
@@ -159,6 +178,12 @@ class Node {
         this.connected = true;
         const connectionTime = Date.now() - this.connectionStartTime;
         this.tera.emit('debug', this.name, `Connection established in ${connectionTime}ms`);
+        
+        // Track successful connection
+        this.healthMetrics.successfulConnections++;
+        this.connectionStability.consecutiveFailures = 0;
+        this.connectionStability.backoffMultiplier = 1;
+        
         try {
             const timeoutPromise = new Promise((_, reject) => 
                 setTimeout(() => reject(new Error('Node info fetch timeout')), 5000)
@@ -215,7 +240,48 @@ class Node {
 
     error(event) {
         if (!event) return;
+        
+        // Track error for health monitoring
+        this.errorCount++;
+        this.lastErrorTime = Date.now();
+        this.connectionStability.consecutiveFailures++;
+        
         this.tera.emit("nodeError", this, event);
+    }
+    
+    /**
+     * Get node health status
+     * @returns {Object} Health status object
+     */
+    getHealthStatus() {
+        const now = Date.now();
+        const uptime = this.connected ? now - (this.connectionStartTime || now) : 0;
+        const avgPing = this.pingHistory.length > 0 ? 
+            this.pingHistory.reduce((a, b) => a + b, 0) / this.pingHistory.length : 0;
+        
+        return {
+            name: this.name,
+            connected: this.connected,
+            uptime,
+            ping: this.lastPing,
+            averagePing: Math.round(avgPing),
+            errorCount: this.errorCount,
+            lastError: this.lastErrorTime,
+            consecutiveFailures: this.connectionStability.consecutiveFailures,
+            connectionStability: this.connectionStability.consecutiveFailures < this.connectionStability.maxConsecutiveFailures ? 'stable' : 'unstable',
+            healthMetrics: this.healthMetrics,
+            stats: this.stats
+        };
+    }
+    
+    /**
+     * Check if node is healthy and ready for use
+     * @returns {boolean} Whether node is healthy
+     */
+    isHealthy() {
+        return this.connected && 
+               this.connectionStability.consecutiveFailures < this.connectionStability.maxConsecutiveFailures &&
+               this.lastPing < 1000; // Less than 1 second ping
     }
 
     async message(msg) {
